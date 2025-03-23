@@ -1,4 +1,16 @@
-﻿using System;
+﻿// Example usings.
+using Celeste.Mod.UI;
+using FMOD.Studio;
+using Microsoft.Xna.Framework;
+using Monocle;
+using Celeste;
+using Celeste.Mod;
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace Celeste.Mod.Test;
 
@@ -23,18 +35,36 @@ public class TestModule : EverestModule {
     }
 
     public override void Load() {
-        // TODO: apply any hooks that should always be active
+        On.Celeste.ScreenWipe.ctor += ScreenWipe_Ctor;
     }
 
     public override void Unload() {
-        // TODO: unapply any hooks applied in Load()
+        On.Celeste.ScreenWipe.ctor -= ScreenWipe_Ctor;
     }
 
-    // Optional, initialize anything after Celeste has initialized itself properly.
-    public override void Initialize() {
-    }
+    private static void ScreenWipe_Ctor(On.Celeste.ScreenWipe.orig_ctor orig, ScreenWipe self, Scene scene, bool wipeIn, Action onComplete) {
 
-    // Optional, do anything requiring either the Celeste or mod content here.
-    public override void LoadContent(bool firstLoad) {
+        orig(self, scene, wipeIn, onComplete);
+        
+        if (!wipeIn && scene is Level level) {
+
+            if (level.Session.Deaths > 0) {
+                
+                scene.OnEndOfFrame += () => {
+                    if (self != null) {
+                        self.Cancel();
+
+                        Player player = self.Scene?.Entities?.FindFirst<Player>();
+
+                        if (player == null) {
+                            Vector2 spawnPoint = level.Session.RespawnPoint ?? level.DefaultSpawnPoint;
+
+                            player = new Player(spawnPoint, PlayerSpriteMode.Madeline);
+                            level.Add(player);
+                        }
+                    }
+                };
+            }
+        }
     }
 }

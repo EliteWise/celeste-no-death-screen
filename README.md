@@ -1,2 +1,2 @@
-# Test
-Replace with your mod's readme!
+# NoDeathScreen
+This mod removes the death screen for instant respawns!
