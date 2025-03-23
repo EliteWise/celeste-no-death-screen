@@ -3,4 +3,4 @@
   DLL: bin/NoDeathScreen.dll
   Dependencies:
     - Name: EverestCore
-      Version: 1.4673.0
+      Version: 1.5416.0
