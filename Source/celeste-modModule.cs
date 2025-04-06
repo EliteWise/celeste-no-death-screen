@@ -36,35 +36,38 @@ public class TestModule : EverestModule {
 
     public override void Load() {
         On.Celeste.ScreenWipe.ctor += ScreenWipe_Ctor;
+        //On.Celeste.LevelExit.ctor += OnExit;
     }
 
     public override void Unload() {
         On.Celeste.ScreenWipe.ctor -= ScreenWipe_Ctor;
+        //On.Celeste.LevelExit.ctor -= OnExit;
     }
 
-    private static void ScreenWipe_Ctor(On.Celeste.ScreenWipe.orig_ctor orig, ScreenWipe self, Scene scene, bool wipeIn, Action onComplete) {
+    /*private static void OnExit(On.Celeste.LevelExit.orig_ctor orig, LevelExit self, LevelExit.Mode mode, Session session, HiresSnow snow) {
+        orig(self, mode, session, snow);;
+    }*/
 
+    private static void ScreenWipe_Ctor(On.Celeste.ScreenWipe.orig_ctor orig, ScreenWipe self, Scene scene, bool wipeIn, Action onComplete) {
         orig(self, scene, wipeIn, onComplete);
         
-        if (!wipeIn && scene is Level level) {
-
-            if (level.Session.Deaths > 0) {
-                
-                scene.OnEndOfFrame += () => {
-                    if (self != null) {
+        if (scene is Level level && scene.Entities != null && !scene.Paused) {
+            scene.OnEndOfFrame += () => {
+                if (self != null && self.Scene != null && self.Scene == level && !level.Transitioning && level.Session.Deaths > 0) {
+                    if (Engine.Scene == level) {
                         self.Cancel();
-
-                        Player player = self.Scene?.Entities?.FindFirst<Player>();
-
-                        if (player == null) {
-                            Vector2 spawnPoint = level.Session.RespawnPoint ?? level.DefaultSpawnPoint;
-
-                            player = new Player(spawnPoint, PlayerSpriteMode.Madeline);
-                            level.Add(player);
-                        }
                     }
-                };
-            }
+
+                    Player player = self.Scene?.Entities?.FindFirst<Player>();
+
+                    if (player == null) {
+                        Vector2 spawnPoint = level.Session.RespawnPoint ?? level.DefaultSpawnPoint;
+
+                        player = new Player(spawnPoint, PlayerSpriteMode.Madeline);
+                        level.Add(player);
+                    }
+                }
+            };
         }
     }
 }
